@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ═══════ TITLE ════════════════════════════════════════════════════════ -->
+    <mxCell id="title" value="FanVault – Microservices Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;fontColor=#1B4332;" vertex="1" parent="1">
+      <mxGeometry x="327" y="20" width="1000" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ BROWSER ══════════════════════════════════════════════════════ -->
+    <mxCell id="browser" value="&lt;b&gt;Browser / Client&lt;/b&gt;&lt;br/&gt;React SPA" style="shape=mxgraph.network.pc;html=1;whiteSpace=wrap;fillColor=#f4fdf6;strokeColor=#2D6A4F;fontColor=#1B4332;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="720" y="80" width="120" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ FRONTEND / NGINX ═════════════════════════════════════════════ -->
+    <mxCell id="frontend" value="&lt;b&gt;Frontend Service&lt;/b&gt;&lt;br/&gt;React + Vite + Nginx&lt;br/&gt;Port: 80" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D8F3DC;strokeColor=#2D6A4F;fontColor=#1B4332;arcSize=8;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="620" y="230" width="320" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ BACKEND SERVICES ═════════════════════════════════════════════ -->
+    <!-- Auth -->
+    <mxCell id="auth" value="&lt;b&gt;Auth Service&lt;/b&gt;&lt;br/&gt;Node.js + Express&lt;br/&gt;JWT / bcrypt&lt;br/&gt;Port: 3001" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B7E4C7;strokeColor=#40916C;fontColor=#1B4332;arcSize=8;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="160" y="400" width="180" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- User -->
+    <mxCell id="user" value="&lt;b&gt;User Service&lt;/b&gt;&lt;br/&gt;Node.js + Express&lt;br/&gt;Profile management&lt;br/&gt;Port: 3002" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B7E4C7;strokeColor=#40916C;fontColor=#1B4332;arcSize=8;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="430" y="400" width="180" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- Product -->
+    <mxCell id="product" value="&lt;b&gt;Product Service&lt;/b&gt;&lt;br/&gt;Node.js + Express&lt;br/&gt;Catalog + Seeding&lt;br/&gt;Port: 3003" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B7E4C7;strokeColor=#40916C;fontColor=#1B4332;arcSize=8;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="400" width="180" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- Order -->
+    <mxCell id="order" value="&lt;b&gt;Order Service&lt;/b&gt;&lt;br/&gt;Node.js + Express&lt;br/&gt;Order lifecycle&lt;br/&gt;Port: 3004" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B7E4C7;strokeColor=#40916C;fontColor=#1B4332;arcSize=8;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="970" y="400" width="180" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- Email -->
+    <mxCell id="email" value="&lt;b&gt;Email Service&lt;/b&gt;&lt;br/&gt;Node.js + Nodemailer&lt;br/&gt;Order confirmations&lt;br/&gt;Port: 3005" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B7E4C7;strokeColor=#40916C;fontColor=#1B4332;arcSize=8;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1240" y="400" width="180" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ DATABASE ══════════════════════════════════════════════════════ -->
+    <mxCell id="mongo" value="&lt;b&gt;MongoDB 7&lt;/b&gt;&lt;br/&gt;Port: 27017&lt;br/&gt;auth-db | user-db&lt;br/&gt;product-db | order-db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f4fdf6;strokeColor=#2D6A4F;fontColor=#1B4332;arcSize=8;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="610" y="600" width="340" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ SMTP PROVIDER ═════════════════════════════════════════════════ -->
+    <mxCell id="smtp" value="&lt;b&gt;SMTP Provider&lt;/b&gt;&lt;br/&gt;Gmail / Brevo&lt;br/&gt;Mailtrap (dev)" style="shape=mxgraph.azure.email;html=1;pointerEvents=1;dashed=0;fillColor=#f4fdf6;strokeColor=#2D6A4F;fontColor=#1B4332;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1270" y="590" width="120" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ DOCKER NETWORK BOUNDARY ══════════════════════════════════════ -->
+    <mxCell id="dockernet" value="fanvault-network  (Docker bridge)" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];shape=mxgraph.lean_mapping.electronic_info_flow_edge;html=1;whiteSpace=wrap;strokeColor=#2D6A4F;fillColor=none;dashed=1;dashPattern=8 4;strokeWidth=2;fontColor=#2D6A4F;fontStyle=2;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="100" y="370" width="1380" height="390" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ ARROWS – Browser to Frontend ════════════════════════════════ -->
+    <mxCell id="e_browser_fe" value="HTTP :80" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2D6A4F;fontColor=#2D6A4F;fillColor=#2D6A4F;fontStyle=1;fontSize=11;" edge="1" source="browser" target="frontend" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Frontend to Auth -->
+    <mxCell id="e_fe_auth" value="/api/auth/*" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#40916C;fontColor=#1B4332;fontStyle=0;fontSize=10;" edge="1" source="frontend" target="auth" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Frontend to User -->
+    <mxCell id="e_fe_user" value="/api/users/*" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#40916C;fontColor=#1B4332;fontStyle=0;fontSize=10;" edge="1" source="frontend" target="user" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Frontend to Product -->
+    <mxCell id="e_fe_product" value="/api/products/*" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#40916C;fontColor=#1B4332;fontStyle=0;fontSize=10;" edge="1" source="frontend" target="product" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Frontend to Order -->
+    <mxCell id="e_fe_order" value="/api/orders/*" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#40916C;fontColor=#1B4332;fontStyle=0;fontSize=10;" edge="1" source="frontend" target="order" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Order to Email (internal) -->
+    <mxCell id="e_order_email" value="HTTP internal&lt;br/&gt;(order confirmed)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#52B788;fontColor=#1B4332;fontStyle=2;fontSize=10;dashed=1;" edge="1" source="order" target="email" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Email to SMTP -->
+    <mxCell id="e_email_smtp" value="SMTP" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#52B788;fontColor=#1B4332;fontStyle=1;fontSize=11;" edge="1" source="email" target="smtp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Auth to Mongo -->
+    <mxCell id="e_auth_mongo" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2D6A4F;endArrow=ERmany;endFill=1;fontSize=10;" edge="1" source="auth" target="mongo" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- User to Mongo -->
+    <mxCell id="e_user_mongo" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2D6A4F;endArrow=ERmany;endFill=1;fontSize=10;" edge="1" source="user" target="mongo" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Product to Mongo -->
+    <mxCell id="e_product_mongo" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2D6A4F;endArrow=ERmany;endFill=1;fontSize=10;" edge="1" source="product" target="mongo" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Order to Mongo -->
+    <mxCell id="e_order_mongo" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2D6A4F;endArrow=ERmany;endFill=1;fontSize=10;" edge="1" source="order" target="mongo" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ LEGEND ════════════════════════════════════════════════════════ -->
+    <mxCell id="legend_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#d1d5db;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="790" width="380" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="120" y="800" width="100" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg1" value="Solid arrow = HTTP request (sync)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="825" width="260" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg2" value="Dashed arrow = Internal service call (async)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="850" width="280" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg3" value="Dashed border = Docker bridge network" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="875" width="280" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg4" value="All backend services share one MongoDB host" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="900" width="300" height="20" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════ NOTES ══════════════════════════════════════════════════════════ -->
+    <mxCell id="note_nginx" value="Nginx reverse-proxies /api/* to services.&lt;br/&gt;Direct browser GET on /api/* → 302 /login." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff9c4;strokeColor=#d6b656;fontColor=#574900;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="960" y="220" width="240" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="note_jwt" value="JWT verified locally in each service.&lt;br/&gt;No auth-service call per request." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff9c4;strokeColor=#d6b656;fontColor=#574900;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="100" y="790" width="0" height="0" as="geometry" />
+    </mxCell>
+    <mxCell id="note_email" value="Order service notifies email service&lt;br/&gt;fire-and-forget (non-blocking)." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff9c4;strokeColor=#d6b656;fontColor=#574900;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1240" y="520" width="210" height="55" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

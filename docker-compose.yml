@@ -1,0 +1,206 @@
+version: "3.9"
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  FanVault – Docker Compose
+#  All services share a single MongoDB instance with separate databases.
+#  Service-to-service calls use Docker's internal DNS (service names).
+# ═══════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── MongoDB ─────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0-jammy
+    container_name: fanvault-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS}
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"        # Expose only for local dev inspection; remove in prod
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── Auth Service ─────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: fanvault-auth
+    restart: unless-stopped
+    env_file: ./auth-service/.env
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/auth-db?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── User Service ─────────────────────────────────────────────────────────
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: fanvault-user
+    restart: unless-stopped
+    env_file: ./user-service/.env
+    environment:
+      PORT: 3002
+      NODE_ENV: production
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/user-db?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Product Service ──────────────────────────────────────────────────────
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: fanvault-product
+    restart: unless-stopped
+    env_file: ./product-service/.env
+    environment:
+      PORT: 3003
+      NODE_ENV: production
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/product-db?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Order Service ────────────────────────────────────────────────────────
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: fanvault-order
+    restart: unless-stopped
+    env_file: ./order-service/.env
+    environment:
+      PORT: 3004
+      NODE_ENV: production
+      MONGO_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/order-db?authSource=admin
+      JWT_SECRET: ${JWT_SECRET}
+      EMAIL_SERVICE_URL: http://email-service:3005
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      email-service:
+        condition: service_healthy
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Email Service ────────────────────────────────────────────────────────
+  email-service:
+    build:
+      context: ./email-service
+      dockerfile: Dockerfile
+    container_name: fanvault-email
+    restart: unless-stopped
+    env_file: ./email-service/.env
+    environment:
+      PORT: 3005
+      NODE_ENV: production
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── Frontend (React + Nginx) ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fanvault-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    networks:
+      - fanvault-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+# ── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  mongo-data:
+    name: fanvault-mongo-data
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  fanvault-net:
+    name: fanvault-network
+    driver: bridge
