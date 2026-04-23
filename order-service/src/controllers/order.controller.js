@@ -16,7 +16,12 @@ const notifyOrder = async (order) => {
         total: order.total,
         shippingAddress: order.shippingAddress,
       },
-      { timeout: 5000 }
+      {
+        timeout: 5000,
+        headers: {
+          'x-internal-secret': process.env.INTERNAL_SECRET,
+        },
+      }
     );
     return true;
   } catch (err) {
