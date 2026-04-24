@@ -12,10 +12,10 @@
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── Image ─────────────────────────────────────────────────────────────────────
-image:
-  # RabbitMQ 3.13 – stable LTS release (management plugin included)
-  tag: 3.13.7-debian-12-r5
-  pullPolicy: IfNotPresent
+# image:
+#   # RabbitMQ 3.13 – stable LTS release (management plugin included)
+#   tag: 3.13.7-debian-12-r5
+#   pullPolicy: IfNotPresent
 
 # ── Authentication ────────────────────────────────────────────────────────────
 # Credentials match the RABBITMQ_URL in the k8s secrets:
@@ -49,7 +49,7 @@ service:
 persistence:
   enabled: true
   # Change "nfs-client" to your actual StorageClass name
-  storageClass: "nfs-client"
+  storageClass: "nfs-storage"
   accessMode: ReadWriteOnce
   size: 4Gi
 

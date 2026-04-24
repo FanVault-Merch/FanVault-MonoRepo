@@ -62,13 +62,13 @@ resources:
   - deployments/frontend-deploy.yaml
 
   # ── 6. Network Policies ─────────────────────────────────────────────────────
-  - network-policies/auth-service-netpol.yaml
-  - network-policies/user-service-netpol.yaml
-  - network-policies/product-service-netpol.yaml
-  - network-policies/order-service-netpol.yaml
-  - network-policies/email-service-netpol.yaml
-  - network-policies/frontend-netpol.yaml
+  # - network-policies/auth-service-netpol.yaml
+  # - network-policies/user-service-netpol.yaml
+  # - network-policies/product-service-netpol.yaml
+  # - network-policies/order-service-netpol.yaml
+  # - network-policies/email-service-netpol.yaml
+  # - network-policies/frontend-netpol.yaml
 
-  # ── 7. Gateway + HTTPRoutes ─────────────────────────────────────────────────
-  - gateway/gateway.yaml
-  - gateway/httproutes.yaml
+  # # ── 7. Gateway + HTTPRoutes ─────────────────────────────────────────────────
+  # - gateway/gateway.yaml
+  # - gateway/httproutes.yaml

@@ -12,16 +12,16 @@
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── Image ─────────────────────────────────────────────────────────────────────
-image:
-  # Pin to MongoDB 7.0 (matches docker-compose: mongo:7.0-jammy)
-  tag: 7.0.15-debian-12-r0
-  pullPolicy: IfNotPresent
+# image:
+#   # Pin to MongoDB 7.0 (matches docker-compose: mongo:7.0-jammy)
+#   tag: 7.0
+#   pullPolicy: IfNotPresent
 
 # ── Architecture ──────────────────────────────────────────────────────────────
 # replicaset enables the rs0 replica set required by the connection strings:
 # ?replicaSet=rs0
 architecture: replicaset
-replicaCount: 3
+replicaCount: 2
 
 # ── Authentication ────────────────────────────────────────────────────────────
 # Credentials match the MONGODB_URI in the k8s secrets:
@@ -67,7 +67,7 @@ persistence:
   enabled: true
   # Use the NFS storage class configured on your cluster.
   # Change "nfs-client" to match your actual StorageClass name.
-  storageClass: "nfs-client"
+  storageClass: "nfs-storage"
   accessModes:
     - ReadWriteOnce
   size: 8Gi
