@@ -1,0 +1,81 @@
+# ── user-service values ──────────────────────────────────────────────────────
+# Deployed via: helm install user ./microservice-base -f environments/user-service-values.yaml -n backend
+
+nameOverride: user-service
+namespace: backend
+
+# ── Image ─────────────────────────────────────────────────
+image:
+  repository: savitxr/fanvault-user
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+containerPort: 3002
+
+# ── Service ───────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 3002
+
+# ── Non-sensitive config ──────────────────────────────────
+config:
+  PORT: "3002"
+  NODE_ENV: "production"
+  SERVICE_NAME: "user-service"
+
+# ── Sensitive config (base64-encoded by Helm) ─────────────
+secret:
+  MONGODB_URI: "mongodb://fanvault_admin:FanVault_Secure_2025!@mongodb.db.svc.cluster.local:27017/user-db?authSource=admin&replicaSet=rs0"
+  JWT_SECRET: "0b849786adec5efb97547d99e6d76438cf37559eee750d23261abf614456a7dd0d07bb3d59560c20df4ece773a398b13"
+  INTERNAL_SECRET: "d742b8e49bb41080791928716d5b426bf135907ff3a5b7bcf7e89b5012b089d4"
+
+# ── Health Probes ─────────────────────────────────────────
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+# ── Resources ─────────────────────────────────────────────
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+# ── Security Context ──────────────────────────────────────
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# ── Network Policy ────────────────────────────────────────
+networkPolicy:
+  enabled: true
+  gatewayNamespace: kgateway-system
+  mongodb:
+    port: 27017
+  rabbitmq:
+    port: 5672
+
+# ── Gateway / HTTPRoute ───────────────────────────────────
+gateway:
+  enabled: false
+  name: fanvault-gateway
+  namespace: backend
+
+httpRoute:
+  enabled: false

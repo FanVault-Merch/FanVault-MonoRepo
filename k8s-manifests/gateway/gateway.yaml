@@ -1,0 +1,21 @@
+# ── kgateway Gateway Resource ─────────────────────────────────────────────────
+# Deploy this ONCE. It creates the shared load balancer entry point.
+# GatewayClass "kgateway" must already be installed via Helm.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: fanvault-gateway
+  namespace: backend
+  labels:
+    app.kubernetes.io/name: fanvault-gateway
+    app.kubernetes.io/component: gateway
+spec:
+  gatewayClassName: kgateway
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: "*"
+      allowedRoutes:
+        namespaces:
+          from: All

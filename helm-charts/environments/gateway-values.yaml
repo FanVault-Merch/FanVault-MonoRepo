@@ -1,0 +1,54 @@
+# ── gateway-values.yaml ──────────────────────────────────────────────────────
+# Deploy the shared kgateway Gateway + all backend HTTPRoutes ONCE.
+# helm install gateway ./microservice-base -f environments/gateway-values.yaml -n backend
+#
+# After this, individual services only need their own service values files.
+
+nameOverride: fanvault-gateway
+namespace: backend
+
+# No deployment/service/configmap/secret for gateway-only release
+replicaCount: 0
+image:
+  repository: ""
+  tag: ""
+
+config: {}
+secret: {}
+
+networkPolicy:
+  enabled: false
+  gatewayNamespace: kgateway-system
+  mongodb:
+    port: 27017
+  rabbitmq:
+    port: 5672
+
+# ── Gateway Resource ──────────────────────────────────────
+gateway:
+  enabled: true
+  name: fanvault-gateway
+  namespace: backend
+  gatewayClassName: kgateway
+  listenerPort: 80
+  listenerHostname: "*"
+
+# ── HTTPRoutes for all backend services ───────────────────
+httpRoute:
+  enabled: true
+  rules:
+    - pathPrefix: /api/auth
+      serviceName: auth-service
+      servicePort: 3001
+    - pathPrefix: /api/users
+      serviceName: user-service
+      servicePort: 3002
+    - pathPrefix: /api/products
+      serviceName: product-service
+      servicePort: 3003
+    - pathPrefix: /api/orders
+      serviceName: order-service
+      servicePort: 3004
+    - pathPrefix: /api/email
+      serviceName: email-service
+      servicePort: 3005

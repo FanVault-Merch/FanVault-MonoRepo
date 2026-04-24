@@ -1,0 +1,46 @@
+# ── product-service NetworkPolicy ─────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: product-service-netpol
+  namespace: backend
+  labels:
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: product-service
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kgateway-system
+      ports:
+        - protocol: TCP
+          port: 3003
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 3003
+
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: db
+      ports:
+        - protocol: TCP
+          port: 27017
+    - to:
+        - podSelector: {}

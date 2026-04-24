@@ -1,0 +1,14 @@
+apiVersion: v2
+name: microservice-base
+description: |
+  A reusable Helm chart for FanVault microservices.
+  Each service is deployed by passing its own values.yaml file.
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - microservice
+  - mern
+  - fanvault
+maintainers:
+  - name: FanVault DevOps

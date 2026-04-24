@@ -1,0 +1,99 @@
+# ──────────────────────────────────────────────────────────
+# Default values – override with a per-service values.yaml
+# ──────────────────────────────────────────────────────────
+
+# Override the chart name for resource naming
+nameOverride: ""
+
+# Kubernetes namespace for this service
+namespace: backend
+
+# ── Deployment ────────────────────────────────────────────
+replicaCount: 2
+
+image:
+  repository: ""        # Docker Hub image name (e.g. savitxr/fanvault-auth)
+  tag: latest
+  pullPolicy: IfNotPresent
+
+containerPort: 3000
+
+# ── Service ───────────────────────────────────────────────
+service:
+  type: ClusterIP
+  port: 3000
+
+# ── Health Probes ─────────────────────────────────────────
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+# ── Resource Limits ───────────────────────────────────────
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+# ── Security Context ──────────────────────────────────────
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# ── ConfigMap (non-sensitive env vars) ────────────────────
+# Key-value pairs injected as env vars via envFrom
+config: {}
+  # NODE_ENV: production
+  # SERVICE_NAME: my-service
+
+# ── Secret (sensitive env vars) ───────────────────────────
+# Values are base64-encoded by Helm at render time
+secret: {}
+  # MONGODB_URI: mongodb://user:pass@host:27017/db
+  # RABBITMQ_URL: amqp://user:pass@host:5672
+
+# ── Gateway & HTTPRoute (enable ONLY for the shared gateway) ──
+gateway:
+  enabled: false
+  name: fanvault-gateway
+  namespace: backend
+  gatewayClassName: kgateway
+  listenerPort: 80
+  listenerHostname: "*"
+
+# ── HTTPRoute ─────────────────────────────────────────────
+httpRoute:
+  enabled: false
+  # List of route rules – each maps a path prefix to a backend service
+  # rules:
+  #   - pathPrefix: /api/auth
+  #     serviceName: auth-service
+  #     servicePort: 3000
+  rules: []
+
+# ── Network Policy ────────────────────────────────────────
+networkPolicy:
+  enabled: true
+  # Namespace label where kgateway runs (to allow ingress from it)
+  gatewayNamespace: kgateway-system
+  mongodb:
+    host: mongodb.db.svc.cluster.local
+    port: 27017
+  rabbitmq:
+    host: rabbitmq.db.svc.cluster.local
+    port: 5672

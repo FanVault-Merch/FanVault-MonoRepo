@@ -1,0 +1,74 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FanVault – Full Stack Kustomize Manifest
+#
+# Deploy order (Kustomize applies resources in the order listed below):
+#   1. Namespaces          — must exist before anything else
+#   2. Secrets             — referenced by Deployments via envFrom
+#   3. ConfigMaps          — referenced by Deployments via envFrom
+#   4. Services            — must exist before Gateway HTTPRoutes resolve them
+#   5. Deployments         — workloads
+#   6. NetworkPolicies     — applied after pods exist
+#   7. Gateway             — shared entry point (kgateway)
+#   8. HTTPRoutes          — routing rules referencing backend Services
+#
+# Usage:
+#   kubectl apply -k k8s-manifests/
+#
+# Dry-run:
+#   kubectl apply -k k8s-manifests/ --dry-run=client
+#
+# Delete everything:
+#   kubectl delete -k k8s-manifests/
+# ─────────────────────────────────────────────────────────────────────────────
+
+resources:
+  # ── 1. Namespaces ───────────────────────────────────────────────────────────
+  - namespaces/backend.yaml
+  - namespaces/frontend.yaml
+
+  # ── 2. Secrets ──────────────────────────────────────────────────────────────
+  - secrets/auth-service-secret.yaml
+  - secrets/user-service-secret.yaml
+  - secrets/product-service-secret.yaml
+  - secrets/order-service-secret.yaml
+  - secrets/email-service-secret.yaml
+
+  # ── 3. ConfigMaps ───────────────────────────────────────────────────────────
+  - configmaps/auth-service-cm.yaml
+  - configmaps/user-service-cm.yaml
+  - configmaps/product-service-cm.yaml
+  - configmaps/order-service-cm.yaml
+  - configmaps/email-service-cm.yaml
+  - configmaps/frontend-cm.yaml
+
+  # ── 4. Services ─────────────────────────────────────────────────────────────
+  - services/auth-service-svc.yaml
+  - services/user-service-svc.yaml
+  - services/product-service-svc.yaml
+  - services/order-service-svc.yaml
+  - services/email-service-svc.yaml
+  - services/frontend-svc.yaml
+
+  # ── 5. Deployments ──────────────────────────────────────────────────────────
+  # email-service first (order-service calls it internally)
+  - deployments/email-service-deploy.yaml
+  - deployments/auth-service-deploy.yaml
+  - deployments/user-service-deploy.yaml
+  - deployments/product-service-deploy.yaml
+  - deployments/order-service-deploy.yaml
+  - deployments/frontend-deploy.yaml
+
+  # ── 6. Network Policies ─────────────────────────────────────────────────────
+  - network-policies/auth-service-netpol.yaml
+  - network-policies/user-service-netpol.yaml
+  - network-policies/product-service-netpol.yaml
+  - network-policies/order-service-netpol.yaml
+  - network-policies/email-service-netpol.yaml
+  - network-policies/frontend-netpol.yaml
+
+  # ── 7. Gateway + HTTPRoutes ─────────────────────────────────────────────────
+  - gateway/gateway.yaml
+  - gateway/httproutes.yaml

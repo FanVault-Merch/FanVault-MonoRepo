@@ -1,0 +1,34 @@
+{{- if .Values.httpRoute.enabled }}
+{{- range .Values.httpRoute.rules }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $.Release.Name }}-{{ .serviceName }}-route
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "microservice.labels" $ | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ $.Values.gateway.name }}
+      namespace: {{ $.Values.gateway.namespace }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .pathPrefix }}
+      {{- if and .pathPrefix (ne .pathPrefix "/") }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              # Strip the /api/<service> prefix before forwarding to the pod
+              replacePrefixMatch: /
+      {{- end }}
+      backendRefs:
+        - name: {{ .serviceName }}
+          namespace: {{ $.Values.namespace }}
+          port: {{ .servicePort }}
+{{- end }}
+{{- end }}

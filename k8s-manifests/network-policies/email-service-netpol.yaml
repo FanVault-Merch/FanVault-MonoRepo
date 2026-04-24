@@ -1,0 +1,52 @@
+# ── email-service NetworkPolicy ───────────────────────────────────────────────
+# Only needs ingress from same-namespace (order-service calls it internally)
+# and kgateway. Egress to RabbitMQ for message consumption + SMTP outbound.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: email-service-netpol
+  namespace: backend
+  labels:
+    app.kubernetes.io/name: email-service
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: email-service
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kgateway-system
+      ports:
+        - protocol: TCP
+          port: 3005
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 3005
+
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: db
+      ports:
+        - protocol: TCP
+          port: 5672
+    # SMTP outbound (Gmail port 587)
+    - ports:
+        - protocol: TCP
+          port: 587
+    - to:
+        - podSelector: {}

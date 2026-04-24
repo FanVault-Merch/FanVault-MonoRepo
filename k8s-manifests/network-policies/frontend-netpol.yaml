@@ -1,0 +1,42 @@
+# ── frontend NetworkPolicy ────────────────────────────────────────────────────
+# Ingress: allow from kgateway (external traffic via gateway)
+# Egress:  allow DNS + calls to backend gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-netpol
+  namespace: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kgateway-system
+      ports:
+        - protocol: TCP
+          port: 80
+
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow egress to backend namespace (fanvault-gateway service)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: backend
+      ports:
+        - protocol: TCP
+          port: 80

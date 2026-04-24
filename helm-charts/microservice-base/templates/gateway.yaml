@@ -1,0 +1,19 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Values.gateway.namespace }}
+  labels:
+    {{- include "microservice.labels" . | nindent 4 }}
+spec:
+  gatewayClassName: {{ .Values.gateway.gatewayClassName }}
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: {{ .Values.gateway.listenerPort }}
+      hostname: {{ .Values.gateway.listenerHostname | quote }}
+      allowedRoutes:
+        namespaces:
+          from: All
+{{- end }}

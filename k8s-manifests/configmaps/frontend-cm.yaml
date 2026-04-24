@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/component: config
+data:
+  NODE_ENV: "production"
+  API_BASE_URL: "http://fanvault-gateway.backend.svc.cluster.local"
