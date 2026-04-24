@@ -1,25 +1,27 @@
-FROM node:18-alpine
+FROM node:18-alpine AS deps
 
-# Create non-root user
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci --only=production && npm cache clean --force
+
+FROM node:18-alpine AS runtime
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+COPY --from=deps /app/node_modules ./node_modules
 
-# Copy source code
+COPY --from=deps /app/package*.json ./
+
 COPY src/ ./src/
 
-# Change ownership
 RUN chown -R appuser:appgroup /app
 
 USER appuser
 
 EXPOSE 3001
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:3001/health || exit 1
 
 CMD ["node", "src/index.js"]

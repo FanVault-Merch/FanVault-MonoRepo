@@ -104,7 +104,7 @@ services:
       mongo:
         condition: service_healthy
       email-service:
-        condition: service_healthy
+        condition: service_started
     networks:
       - fanvault-net
 
@@ -134,13 +134,13 @@ services:
       - "80:80"
     depends_on:
       auth-service:
-        condition: service_healthy
+        condition: service_started
       user-service:
-        condition: service_healthy
+        condition: service_started
       product-service:
-        condition: service_healthy
+        condition: service_started
       order-service:
-        condition: service_healthy
+        condition: service_started
     networks:
       - fanvault-net
 
