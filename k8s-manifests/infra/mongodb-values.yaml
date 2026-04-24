@@ -1,0 +1,120 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  MongoDB – Bitnami Helm Values
+#  Chart:   bitnami/mongodb
+#  Deploy:  helm install mongodb bitnami/mongodb \
+#             -f k8s-manifests/infra/mongodb-values.yaml \
+#             -n db --create-namespace \
+#             --version 16.4.0
+#
+#  MongoDB Version installed: 7.0.x (pinned via image.tag)
+#  Namespace: db
+#  Architecture: replicaset (rs0 – required by the app's connection strings)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── Image ─────────────────────────────────────────────────────────────────────
+image:
+  # Pin to MongoDB 7.0 (matches docker-compose: mongo:7.0-jammy)
+  tag: 7.0.15-debian-12-r0
+  pullPolicy: IfNotPresent
+
+# ── Architecture ──────────────────────────────────────────────────────────────
+# replicaset enables the rs0 replica set required by the connection strings:
+# ?replicaSet=rs0
+architecture: replicaset
+replicaCount: 3
+
+# ── Authentication ────────────────────────────────────────────────────────────
+# Credentials match the MONGODB_URI in the k8s secrets:
+# mongodb://root:root@123@mongodb.db.svc.cluster.local:27017/<db>?authSource=admin
+auth:
+  enabled: true
+  rootUser: root
+  rootPassword: "root@123"
+  # Per-database users (optional — services use root for simplicity)
+  # If you want dedicated users per service, uncomment and fill in:
+  # usernames:
+  #   - fanvault_auth
+  #   - fanvault_user
+  #   - fanvault_product
+  #   - fanvault_order
+  # passwords:
+  #   - authpass
+  #   - userpass
+  #   - productpass
+  #   - orderpass
+  # databases:
+  #   - auth-db
+  #   - user-db
+  #   - product-db
+  #   - order-db
+
+# ── Replica Set Name ──────────────────────────────────────────────────────────
+# Must match ?replicaSet=rs0 in all MONGODB_URI connection strings
+replicaSetName: rs0
+replicaSetHostnames: true
+
+# ── Service ───────────────────────────────────────────────────────────────────
+# Services are ClusterIP; backend pods reach MongoDB at:
+#   mongodb.db.svc.cluster.local:27017
+service:
+  nameOverride: mongodb
+  type: ClusterIP
+  portName: mongodb
+  port: 27017
+
+# ── Persistence (NFS Dynamic Provisioner) ─────────────────────────────────────
+persistence:
+  enabled: true
+  # Use the NFS storage class configured on your cluster.
+  # Change "nfs-client" to match your actual StorageClass name.
+  storageClass: "nfs-client"
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+
+# ── Resource Limits ───────────────────────────────────────────────────────────
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+# ── Arbiter (optional 4th member for odd quorum without full replica cost) ────
+arbiter:
+  enabled: true
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+# ── Metrics (optional Prometheus exporter) ────────────────────────────────────
+metrics:
+  enabled: false
+  # Set to true and configure serviceMonitor if you have Prometheus installed
+
+# ── Pod Disruption Budget ─────────────────────────────────────────────────────
+pdb:
+  create: true
+  minAvailable: 2
+
+# ── Network Policy ────────────────────────────────────────────────────────────
+networkPolicy:
+  enabled: true
+  # Allow ingress only from the backend namespace
+  ingressRules:
+    primaryAccessOnlyFrom:
+      enabled: true
+      namespaceSelector:
+        kubernetes.io/metadata.name: backend
+    secondaryAccessOnlyFrom:
+      enabled: true
+      namespaceSelector:
+        kubernetes.io/metadata.name: backend
+
+# ── Pod Anti-Affinity (spread across worker nodes) ────────────────────────────
+podAntiAffinityPreset: soft

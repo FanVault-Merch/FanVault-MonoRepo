@@ -1,0 +1,94 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  RabbitMQ – Bitnami Helm Values
+#  Chart:   bitnami/rabbitmq
+#  Deploy:  helm install rabbitmq bitnami/rabbitmq \
+#             -f k8s-manifests/infra/rabbitmq-values.yaml \
+#             -n db --create-namespace \
+#             --version 15.4.0
+#
+#  RabbitMQ Version installed: 3.13.x (stable LTS, pinned via image.tag)
+#  Namespace: db
+#  The app's connection string: amqp://root:root@123@rabbitmq.db.svc.cluster.local:5672
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── Image ─────────────────────────────────────────────────────────────────────
+image:
+  # RabbitMQ 3.13 – stable LTS release (management plugin included)
+  tag: 3.13.7-debian-12-r5
+  pullPolicy: IfNotPresent
+
+# ── Authentication ────────────────────────────────────────────────────────────
+# Credentials match the RABBITMQ_URL in the k8s secrets:
+# amqp://root:root@123@rabbitmq.db.svc.cluster.local:5672
+auth:
+  username: root
+  password: "root@123"
+  # Erlang cookie – shared secret for cluster node communication.
+  # Must be the same across all replicas. Change to a unique random value.
+  erlangCookie: "FanVaultRabbitMQSecretCookie2025"
+
+# ── Replication (HA cluster) ──────────────────────────────────────────────────
+replicaCount: 2
+
+# ── Service ───────────────────────────────────────────────────────────────────
+# Pods reach RabbitMQ at: rabbitmq.db.svc.cluster.local:5672
+service:
+  type: ClusterIP
+  portEnabled: true
+  port: 5672           # AMQP port used by order-service and email-service
+  managerPortEnabled: true
+  managerPort: 15672   # Management UI (accessible via kubectl port-forward)
+
+# ── Management Plugin ─────────────────────────────────────────────────────────
+# The Bitnami image ships with the management plugin pre-enabled.
+# Access the dashboard via:
+#   kubectl port-forward svc/rabbitmq 15672:15672 -n db
+#   Open: http://localhost:15672  (user: root / root@123)
+
+# ── Persistence (NFS Dynamic Provisioner) ─────────────────────────────────────
+persistence:
+  enabled: true
+  # Change "nfs-client" to your actual StorageClass name
+  storageClass: "nfs-client"
+  accessMode: ReadWriteOnce
+  size: 4Gi
+
+# ── Resource Limits ───────────────────────────────────────────────────────────
+resources:
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+# ── Pod Disruption Budget ─────────────────────────────────────────────────────
+pdb:
+  create: true
+  minAvailable: 1
+
+# ── Metrics (optional Prometheus exporter) ────────────────────────────────────
+metrics:
+  enabled: false
+  # Set to true if Prometheus is installed in your cluster
+
+# ── Network Policy ────────────────────────────────────────────────────────────
+networkPolicy:
+  enabled: true
+  # Allow AMQP ingress only from the backend namespace
+  ingressRules:
+    accessOnlyFrom:
+      enabled: true
+      namespaceSelector:
+        kubernetes.io/metadata.name: backend
+
+# ── Pod Anti-Affinity (spread across worker nodes) ────────────────────────────
+podAntiAffinityPreset: soft
+
+# ── Extra Configuration ───────────────────────────────────────────────────────
+# Pre-declare queues/vhosts (optional – services will also create on connect)
+extraConfiguration: |
+  default_vhost = /
+  default_permissions.configure = .*
+  default_permissions.read = .*
+  default_permissions.write = .*
