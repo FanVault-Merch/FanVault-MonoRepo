@@ -1,0 +1,87 @@
+name: Monorepo Security Scans (Sonar, Snyk, Trivy)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security-scans:
+    name: Scan ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - auth-service
+          - email-service
+          - frontend
+          - order-service
+          - product-service
+          - user-service
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required by SonarQube for full history
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        working-directory: ./${{ matrix.service }}
+        run: npm ci || npm install
+
+      # 1. SonarQube Analysis
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          projectBaseDir: ./${{ matrix.service }}
+          args: >
+            -Dsonar.projectKey=Savitxr_Ust-DevOps-Capstone_${{ matrix.service }}
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
+
+      # 2. Snyk Vulnerability Scan
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Snyk Security Scan
+        continue-on-error: true # Ensure the pipeline continues to Trivy even if Snyk finds issues
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          echo "### Snyk Scan Results for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          snyk test --file=./${{ matrix.service }}/package.json >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # 3. Trivy Filesystem Scan
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './${{ matrix.service }}'
+          format: 'table'
+          output: 'trivy-results.txt'
+          exit-code: '0' # Set to 1 if you want the pipeline to fail on Critical/High vulnerabilities
+          ignore-unfixed: true # Only show vulnerabilities that have a fixed version
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Trivy Output to Step Summary
+        run: |
+          echo "### Trivy Scan Results for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat trivy-results.txt >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
