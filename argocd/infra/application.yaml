@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fanvault-infra
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: fanvault
+  # Cascading delete: removing this Application also removes all K8s resources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: fanvault
+
+  source:
+    repoURL: https://github.com/<your-org>/<your-repo>.git
+    targetRevision: main
+    path: hipstershop-infra
+    helm:
+      releaseName: fanvault-infra
+      valueFiles:
+        - values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

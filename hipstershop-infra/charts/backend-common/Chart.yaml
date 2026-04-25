@@ -1,0 +1,8 @@
+apiVersion: v2
+name: backend-common
+description: |
+  Shared infrastructure chart for FanVault.
+  Renders: Namespace, ConfigMaps, Secrets, NetworkPolicies, RBAC.
+  All templates are driven by values passed from the parent hipstershop-infra chart.
+type: application
+version: 1.0.0

@@ -1,0 +1,19 @@
+# ══════════════════════════════════════════════════════════════════
+#  hipstershop-micro-apps – Global Values
+#  These are passed down to each sub-chart.
+#  Individual service values.yaml files can override per-service.
+# ══════════════════════════════════════════════════════════════════
+global:
+  namespace: dev
+  imageRegistry: docker.io
+  imagePullPolicy: IfNotPresent
+  partOf: fanvault
+
+# Sub-chart global overrides (Helm passes global values to all sub-charts)
+# Individual sub-chart values.yaml have the actual defaults.
+# Override specific values here if needed across all services.
+
+# Example: set all service image tags to a specific version at deploy time:
+# auth-service:
+#   image:
+#     tag: v1.2.3

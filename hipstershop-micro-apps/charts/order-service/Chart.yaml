@@ -1,0 +1,5 @@
+apiVersion: v2
+name: order-service
+description: FanVault Order Service – Deployment + Service only
+type: application
+version: 1.0.0

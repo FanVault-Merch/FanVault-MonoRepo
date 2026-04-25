@@ -1,0 +1,7 @@
+apiVersion: v2
+name: loadgenerator
+description: |
+  Load generator stub chart for FanVault.
+  Placeholder — replace with k6 or Locust deployment when needed.
+type: application
+version: 1.0.0

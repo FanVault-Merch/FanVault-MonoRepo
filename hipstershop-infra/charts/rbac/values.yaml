@@ -1,0 +1,11 @@
+namespace: dev
+partOf: fanvault
+
+# One ServiceAccount per microservice
+serviceAccounts:
+  - auth-service
+  - user-service
+  - product-service
+  - order-service
+  - email-service
+  - frontend

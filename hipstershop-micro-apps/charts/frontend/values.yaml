@@ -1,0 +1,46 @@
+nameOverride: frontend
+namespace: dev
+partOf: fanvault
+component: frontend
+role: dev-frontend
+
+replicaCount: 2
+
+image:
+  repository: savitxr/fanvault-frontend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+containerPort: 80
+
+service:
+  type: ClusterIP
+  port: 80
+
+probes:
+  liveness:
+    path: /
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+
+# Nginx needs root to bind port 80
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]

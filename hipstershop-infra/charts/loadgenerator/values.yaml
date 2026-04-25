@@ -1,0 +1,11 @@
+enabled: false   # Set to true and configure when load testing is needed
+
+namespace: dev
+image:
+  repository: grafana/k6
+  tag: latest
+  pullPolicy: IfNotPresent
+
+targetUrl: "http://fanvault-gateway.dev.svc.cluster.local"
+vus: 10
+duration: "30s"

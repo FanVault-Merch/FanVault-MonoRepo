@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fanvault
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: FanVault MERN Microservices Project
+
+  # Git repositories this project can pull from
+  sourceRepos:
+    - "https://github.com/<your-org>/<your-repo>.git"
+    - "https://charts.bitnami.com/bitnami"
+
+  # Kubernetes clusters and namespaces this project can deploy to
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: dev
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+
+  # Allowed resource types
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: gateway.networking.k8s.io
+      kind: GatewayClass
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # Sync windows (optional – allow sync anytime)
+  syncWindows: []
+
+  # Role for CI/CD automation
+  roles:
+    - name: ci-deployer
+      description: CI/CD pipeline deploy role
+      policies:
+        - p, proj:fanvault:ci-deployer, applications, sync, fanvault/*, allow
+        - p, proj:fanvault:ci-deployer, applications, get, fanvault/*, allow

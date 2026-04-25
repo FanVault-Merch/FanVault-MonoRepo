@@ -1,0 +1,9 @@
+apiVersion: v2
+name: hipstershop-micro-apps
+description: |
+  Umbrella Helm chart for FanVault microservices.
+  Each sub-chart deploys only a Deployment + Service.
+  Config/Secrets are owned by hipstershop-infra/backend-common.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

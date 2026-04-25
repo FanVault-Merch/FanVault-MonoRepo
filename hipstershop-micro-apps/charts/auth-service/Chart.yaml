@@ -1,0 +1,5 @@
+apiVersion: v2
+name: auth-service
+description: FanVault Auth Service – Deployment + Service only
+type: application
+version: 1.0.0

@@ -1,0 +1,264 @@
+# ══════════════════════════════════════════════════════════════════════════
+#  Zero-Trust Network Policies for FanVault (single namespace: dev)
+#  Strategy: default deny ALL, then explicitly allow required flows.
+#  Pod selection uses `role` labels — NOT namespace selectors.
+#
+#  Traffic Matrix:
+#    frontend   (role=dev-frontend) → gateway  (role=dev-gateway)  :80
+#    gateway    (role=dev-gateway)  → backend  (role=dev-backend)   :*
+#    backend    (role=dev-backend)  → db       (role=dev-db)        :27017,5672
+#    backend    (role=dev-backend)  ↔ backend  (role=dev-backend)   :* (inter-svc)
+#    db         (role=dev-db)       ↔ db       (role=dev-db)        :* (RS election)
+#    email-svc  (by name label)     → SMTP     (external)           :587
+#    ALL pods                       → kube-dns                      :53
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── 1. DEFAULT DENY ALL ────────────────────────────────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: {{ .Values.partOf | default "fanvault" }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+# ── 2. ALLOW DNS EGRESS (all pods need DNS) ────────────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: {{ .Values.partOf | default "fanvault" }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+# ── 3. FRONTEND → GATEWAY ─────────────────────────────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-gateway
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-frontend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: dev-gateway
+      ports:
+        - protocol: TCP
+          port: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-ingress-from-frontend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: dev-frontend
+      ports:
+        - protocol: TCP
+          port: 80
+
+# ── 4. GATEWAY → BACKEND ──────────────────────────────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: dev-backend
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-ingress-from-gateway
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: dev-gateway
+
+# ── 5. BACKEND ↔ BACKEND (inter-service calls, e.g. order→email) ──────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-interservice
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: dev-backend
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: dev-backend
+
+# ── 6. BACKEND → DB (MongoDB + RabbitMQ) ──────────────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-db
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: dev-db
+      ports:
+        - protocol: TCP
+          port: 27017
+        - protocol: TCP
+          port: 5672
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-ingress-from-backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: dev-backend
+      ports:
+        - protocol: TCP
+          port: 27017
+        - protocol: TCP
+          port: 5672
+
+# ── 7. DB ↔ DB (MongoDB replica-set election traffic) ─────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-internal
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: dev-db
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: dev-db
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              role: dev-db
+
+# ── 8. EMAIL-SERVICE → SMTP (external port 587) ───────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-email-smtp-egress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: email-service
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 587

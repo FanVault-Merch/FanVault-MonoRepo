@@ -1,0 +1,25 @@
+apiVersion: v2
+name: hipstershop-infra
+description: |
+  Umbrella Helm chart for FanVault infrastructure.
+  Installs: namespace, network-policies, configmaps, secrets,
+            RBAC, kgateway, MongoDB (bitnami), RabbitMQ (bitnami).
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+dependencies:
+  # ── Local sub-charts (picked up from charts/ directory) ────────────────
+  # backend-common, gateway, rbac, loadgenerator are in charts/ as directories.
+  # They do NOT need to be listed here; Helm auto-discovers them.
+
+  # ── External (bitnami) sub-charts ──────────────────────────────────────
+  - name: mongodb
+    version: "16.4.0"
+    repository: https://charts.bitnami.com/bitnami
+    alias: mongodb
+
+  - name: rabbitmq
+    version: "15.4.0"
+    repository: https://charts.bitnami.com/bitnami
+    alias: rabbitmq

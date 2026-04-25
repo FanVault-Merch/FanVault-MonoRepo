@@ -1,0 +1,245 @@
+# ═══════════════════════════════════════════════════════════════════════
+#  hipstershop-infra – Master Values File
+#  Single source of truth for ALL infrastructure configuration.
+# ═══════════════════════════════════════════════════════════════════════
+
+# ── Global values (inherited by all sub-charts) ─────────────────────────
+global:
+  namespace: dev
+  imageRegistry: docker.io
+  imagePullPolicy: IfNotPresent
+  partOf: fanvault
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# ═══════════════════════════════════════════════════════════════════════
+#  backend-common sub-chart values
+#  Creates: Namespace, ConfigMaps, Secrets, NetworkPolicies
+# ═══════════════════════════════════════════════════════════════════════
+backend-common:
+  namespace: dev
+  partOf: fanvault
+
+  # ── Per-service configuration (ConfigMaps) ────────────────────────────
+  services:
+    auth-service:
+      role: dev-backend
+      port: 3001
+      config:
+        PORT: "3001"
+        NODE_ENV: "production"
+        SERVICE_NAME: "auth-service"
+        JWT_EXPIRES_IN: "15m"
+        JWT_REFRESH_EXPIRES_IN: "7d"
+      secret:
+        MONGO_URI: "mongodb://root:root@123@mongodb.dev.svc.cluster.local:27017/auth-db?authSource=admin&replicaSet=rs0"
+        JWT_SECRET: "0b849786adec5efb97547d99e6d76438cf37559eee750d23261abf614456a7dd0d07bb3d59560c20df4ece773a398b13"
+        JWT_REFRESH_SECRET: "bf47b713587fa9c4a048e82a1f0051a12eda45094ef0bdb22dfcfdd19b441e8f88975d48019f83ecd1dc52426e074f1c"
+
+    user-service:
+      role: dev-backend
+      port: 3002
+      config:
+        PORT: "3002"
+        NODE_ENV: "production"
+        SERVICE_NAME: "user-service"
+      secret:
+        MONGO_URI: "mongodb://root:root@123@mongodb.dev.svc.cluster.local:27017/user-db?authSource=admin&replicaSet=rs0"
+        JWT_SECRET: "0b849786adec5efb97547d99e6d76438cf37559eee750d23261abf614456a7dd0d07bb3d59560c20df4ece773a398b13"
+        INTERNAL_SECRET: "d742b8e49bb41080791928716d5b426bf135907ff3a5b7bcf7e89b5012b089d4"
+
+    product-service:
+      role: dev-backend
+      port: 3003
+      config:
+        PORT: "3003"
+        NODE_ENV: "production"
+        SERVICE_NAME: "product-service"
+      secret:
+        MONGO_URI: "mongodb://root:root@123@mongodb.dev.svc.cluster.local:27017/product-db?authSource=admin&replicaSet=rs0"
+        JWT_SECRET: "0b849786adec5efb97547d99e6d76438cf37559eee750d23261abf614456a7dd0d07bb3d59560c20df4ece773a398b13"
+
+    order-service:
+      role: dev-backend
+      port: 3004
+      config:
+        PORT: "3004"
+        NODE_ENV: "production"
+        SERVICE_NAME: "order-service"
+        EMAIL_SERVICE_URL: "http://email-service.dev.svc.cluster.local:3005"
+      secret:
+        MONGO_URI: "mongodb://root:root@123@mongodb.dev.svc.cluster.local:27017/order-db?authSource=admin&replicaSet=rs0"
+        RABBITMQ_URL: "amqp://root:root@123@rabbitmq.dev.svc.cluster.local:5672"
+        JWT_SECRET: "0b849786adec5efb97547d99e6d76438cf37559eee750d23261abf614456a7dd0d07bb3d59560c20df4ece773a398b13"
+        INTERNAL_SECRET: "d742b8e49bb41080791928716d5b426bf135907ff3a5b7bcf7e89b5012b089d4"
+
+    email-service:
+      role: dev-backend
+      port: 3005
+      config:
+        PORT: "3005"
+        NODE_ENV: "production"
+        SERVICE_NAME: "email-service"
+        SMTP_HOST: "smtp.gmail.com"
+        SMTP_PORT: "587"
+        SMTP_SECURE: "false"
+        SMTP_FROM: "FanVault Store <jayabaaskar@gmail.com>"
+      secret:
+        RABBITMQ_URL: "amqp://root:root@123@rabbitmq.dev.svc.cluster.local:5672"
+        INTERNAL_SECRET: "d742b8e49bb41080791928716d5b426bf135907ff3a5b7bcf7e89b5012b089d4"
+        SMTP_USER: "jayabaaskar@gmail.com"
+        SMTP_PASS: "moefitmxbruudot"
+
+    frontend:
+      role: dev-frontend
+      port: 80
+      config:
+        NODE_ENV: "production"
+        API_BASE_URL: "http://fanvault-gateway.dev.svc.cluster.local"
+      secret: {}
+
+# ═══════════════════════════════════════════════════════════════════════
+#  gateway sub-chart values
+# ═══════════════════════════════════════════════════════════════════════
+gateway:
+  namespace: dev
+  name: fanvault-gateway
+  role: dev-gateway
+  gatewayClassName: kgateway
+  listenerPort: 80
+  listenerHostname: "*"
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+  # All HTTPRoutes defined here – rendered as a single multi-document YAML
+  routes:
+    - name: auth-route
+      pathPrefix: /api/auth
+      serviceName: auth-service
+      servicePort: 3001
+    - name: user-route
+      pathPrefix: /api/users
+      serviceName: user-service
+      servicePort: 3002
+    - name: product-route
+      pathPrefix: /api/products
+      serviceName: product-service
+      servicePort: 3003
+    - name: order-route
+      pathPrefix: /api/orders
+      serviceName: order-service
+      servicePort: 3004
+    - name: email-route
+      pathPrefix: /api/email
+      serviceName: email-service
+      servicePort: 3005
+    - name: frontend-route
+      pathPrefix: /
+      serviceName: frontend
+      servicePort: 80
+
+# ═══════════════════════════════════════════════════════════════════════
+#  MongoDB – bitnami/mongodb sub-chart values
+# ═══════════════════════════════════════════════════════════════════════
+mongodb:
+  architecture: replicaset
+  replicaCount: 2
+
+  auth:
+    enabled: true
+    rootUser: root
+    rootPassword: "root@123"
+
+  replicaSetName: rs0
+  replicaSetHostnames: true
+
+  # Add role label so NetworkPolicy podSelector works
+  podLabels:
+    role: dev-db
+    app.kubernetes.io/part-of: fanvault
+
+  service:
+    type: ClusterIP
+    port: 27017
+
+  persistence:
+    enabled: true
+    storageClass: "nfs-fanvault"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+  arbiter:
+    enabled: true
+
+  pdb:
+    create: true
+    minAvailable: 1
+
+  networkPolicy:
+    enabled: false   # We manage NetworkPolicies via backend-common
+
+# ═══════════════════════════════════════════════════════════════════════
+#  RabbitMQ – bitnami/rabbitmq sub-chart values
+# ═══════════════════════════════════════════════════════════════════════
+rabbitmq:
+  auth:
+    username: root
+    password: "root@123"
+    erlangCookie: "FanVaultRabbitMQSecretCookie2025"
+
+  replicaCount: 2
+
+  # Add role label so NetworkPolicy podSelector works
+  podLabels:
+    role: dev-db
+    app.kubernetes.io/part-of: fanvault
+
+  service:
+    type: ClusterIP
+    port: 5672
+    managerPort: 15672
+
+  persistence:
+    enabled: true
+    storageClass: "nfs-fanvault"
+    accessMode: ReadWriteOnce
+    size: 4Gi
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+  pdb:
+    create: true
+    minAvailable: 1
+
+  networkPolicy:
+    enabled: false   # We manage NetworkPolicies via backend-common
+
+  extraConfiguration: |
+    default_vhost = /
+    default_permissions.configure = .*
+    default_permissions.read = .*
+    default_permissions.write = .*

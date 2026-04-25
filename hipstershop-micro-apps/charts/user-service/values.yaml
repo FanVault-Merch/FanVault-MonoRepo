@@ -1,0 +1,45 @@
+nameOverride: user-service
+namespace: dev
+partOf: fanvault
+component: backend
+role: dev-backend
+
+replicaCount: 2
+
+image:
+  repository: savitxr/fanvault-user
+  tag: latest
+  pullPolicy: IfNotPresent
+
+containerPort: 3002
+
+service:
+  type: ClusterIP
+  port: 3002
+
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
