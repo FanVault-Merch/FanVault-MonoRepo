@@ -14,12 +14,12 @@ spec:
         - path:
             type: PathPrefix
             value: /api/email
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
+      # filters:
+      #   - type: URLRewrite
+      #     urlRewrite:
+      #       path:
+      #         type: ReplacePrefixMatch
+      #         replacePrefixMatch: /
       backendRefs:
         - name: email-service
           namespace: backend

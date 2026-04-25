@@ -24,7 +24,7 @@ spec:
       containers:
         - name: frontend
           image: savitxr/fanvault-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 80

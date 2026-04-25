@@ -67,7 +67,7 @@ persistence:
   enabled: true
   # Use the NFS storage class configured on your cluster.
   # Change "nfs-client" to match your actual StorageClass name.
-  storageClass: "nfs-fanvault"
+  storageClass: "nfs-storage"
   accessModes:
     - ReadWriteOnce
   size: 8Gi
